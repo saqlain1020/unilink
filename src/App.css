@@ -434,6 +434,7 @@ a:focus-visible {
 .primary-action,
 .share-card p,
 .url-box,
+.share-actions,
 .secondary-action {
   grid-column: 1 / -1;
 }
@@ -511,6 +512,17 @@ select option {
 
 .share-card p {
   color: var(--muted);
+}
+
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.share-actions .secondary-action {
+  flex: 1 1 190px;
+  justify-content: center;
 }
 
 .url-box {

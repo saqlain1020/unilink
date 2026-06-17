@@ -1,3 +1,4 @@
+import QRCode from 'qrcode'
 import { useMemo, useState } from 'react'
 import './App.css'
 
@@ -272,6 +273,22 @@ function App() {
     window.setTimeout(() => setCopied(''), 1800)
   }
 
+  async function downloadQrCode() {
+    const dataUrl = await QRCode.toDataURL(shareUrl, {
+      width: 1200,
+      margin: 2,
+      color: {
+        dark: '#111827',
+        light: '#ffffff',
+      },
+    })
+    const link = document.createElement('a')
+
+    link.href = dataUrl
+    link.download = 'unilink-qr.png'
+    link.click()
+  }
+
   function renderItemBoard(
     boardItems: ShareItem[],
     boardLayout: LayoutName,
@@ -442,13 +459,22 @@ function App() {
             path when someone visits.
           </p>
           <div className="url-box">{shareUrl}</div>
-          <button
-            className="secondary-action"
-            type="button"
-            onClick={() => copyText(shareUrl, 'share')}
-          >
-            {copied === 'share' ? 'Copied link' : 'Copy generated URL'}
-          </button>
+          <div className="share-actions">
+            <button
+              className="secondary-action"
+              type="button"
+              onClick={() => copyText(shareUrl, 'share')}
+            >
+              {copied === 'share' ? 'Copied link' : 'Copy generated URL'}
+            </button>
+            <button
+              className="secondary-action"
+              type="button"
+              onClick={downloadQrCode}
+            >
+              Download QR code
+            </button>
+          </div>
         </div>
       </section>
   )
