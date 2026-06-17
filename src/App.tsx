@@ -70,10 +70,10 @@ const kindMeta: Record<ItemKind, { icon: string; label: string; action: string }
 
 const fallbackPayload: SharePayload = {
   v: 1,
-  theme: 'graphite',
-  layout: 'grid',
+  theme: "graphite",
+  layout: "list",
   items: sampleItems,
-}
+};
 
 function makeId() {
   if ('crypto' in window && 'randomUUID' in crypto) {
@@ -489,12 +489,10 @@ function App() {
               <p className="kicker">Want one too?</p>
               <h2>Make your own link board.</h2>
             </div>
-            <a className="make-link" href="#make-your-own">
+            <a className="make-link" href="/">
               Make your own
             </a>
           </section>
-          {hero}
-          {workbench}
         </>
       ) : (
         <>
@@ -504,7 +502,7 @@ function App() {
         </>
       )}
     </main>
-  )
+  );
 }
 
 export default App
