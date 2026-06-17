@@ -42,22 +42,22 @@ const itemKinds: ItemKind[] = ['website', 'phone', 'email', 'text']
 
 const sampleItems: ShareItem[] = [
   {
-    id: 'sample-website',
-    label: 'Launch pad',
-    value: 'https://vite.dev',
+    id: 'sample-portfolio',
+    label: 'Portfolio',
+    value: 'https://saqlain1020.com',
     kind: 'website',
   },
   {
     id: 'sample-email',
-    label: 'Signal line',
-    value: 'hello@unilink.local',
+    label: 'Email',
+    value: 'saqlain1020@outlook.com',
     kind: 'email',
   },
   {
-    id: 'sample-phone',
-    label: 'Hotline',
-    value: '+1 555 010 2049',
-    kind: 'phone',
+    id: 'sample-linkedin',
+    label: 'LinkedIn',
+    value: 'https://www.linkedin.com/in/saqlain1020/',
+    kind: 'website',
   },
 ]
 
