@@ -1,3 +1,7 @@
+import {
+  compressToEncodedURIComponent,
+  decompressFromEncodedURIComponent,
+} from 'lz-string'
 import QRCode from 'qrcode'
 import { useMemo, useState } from 'react'
 import './App.css'
@@ -26,6 +30,15 @@ type SharePayload = {
   theme: ThemeName
   layout: LayoutName
   items: ShareItem[]
+}
+
+type CompactKind = 'w' | 'p' | 'e' | 't'
+type CompactItem = [string, string, CompactKind]
+type CompactPayload = {
+  v: 1
+  t: ThemeName
+  l: LayoutName
+  i: CompactItem[]
 }
 
 const themes: ThemeName[] = [
@@ -67,6 +80,20 @@ const kindMeta: Record<ItemKind, { icon: string; label: string; action: string }
   phone: { icon: '☎', label: 'Phone', action: 'Call' },
   email: { icon: '@', label: 'Email', action: 'Mail' },
   text: { icon: '#', label: 'Text', action: 'Copy' },
+}
+
+const compactKindByItemKind: Record<ItemKind, CompactKind> = {
+  website: 'w',
+  phone: 'p',
+  email: 'e',
+  text: 't',
+}
+
+const itemKindByCompactKind: Record<CompactKind, ItemKind> = {
+  w: 'website',
+  p: 'phone',
+  e: 'email',
+  t: 'text',
 }
 
 const fallbackPayload: SharePayload = {
@@ -128,18 +155,88 @@ function itemHref(item: ShareItem) {
   return undefined
 }
 
-function encodePayload(payload: SharePayload) {
-  const bytes = new TextEncoder().encode(JSON.stringify(payload))
-  let binary = ''
+function toCompactPayload(payload: SharePayload): CompactPayload {
+  return {
+    v: 1,
+    t: payload.theme,
+    l: payload.layout,
+    i: payload.items.map((item) => [
+      item.label,
+      item.value,
+      compactKindByItemKind[item.kind],
+    ]),
+  }
+}
 
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte)
+function validateCompactPayload(value: unknown): SharePayload | null {
+  if (!value || typeof value !== 'object') {
+    return null
   }
 
-  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
+  const payload = value as Partial<CompactPayload>
+
+  if (
+    payload.v !== 1 ||
+    !themes.includes(payload.t as ThemeName) ||
+    !layouts.includes(payload.l as LayoutName) ||
+    !Array.isArray(payload.i)
+  ) {
+    return null
+  }
+
+  const items = payload.i
+    .filter((item): item is CompactItem => {
+      if (!Array.isArray(item) || item.length !== 3) {
+        return false
+      }
+
+      const [label, itemValue, compactKind] = item
+
+      return (
+        typeof label === 'string' &&
+        typeof itemValue === 'string' &&
+        compactKind in itemKindByCompactKind
+      )
+    })
+    .slice(0, 24)
+    .map(([itemLabel, itemValue, compactKind], index) => ({
+      id: `shared-${index}-${itemLabel}-${compactKind}`,
+      label: itemLabel,
+      value: itemValue,
+      kind: itemKindByCompactKind[compactKind],
+    }))
+
+  return {
+    v: 1,
+    theme: payload.t as ThemeName,
+    layout: payload.l as LayoutName,
+    items,
+  }
+}
+
+function encodePayload(payload: SharePayload) {
+  return `c.${compressToEncodedURIComponent(JSON.stringify(toCompactPayload(payload)))}`
 }
 
 function decodePayload(encoded: string): SharePayload | null {
+  if (encoded.startsWith('c.')) {
+    try {
+      const decompressed = decompressFromEncodedURIComponent(encoded.slice(2))
+
+      if (!decompressed) {
+        return null
+      }
+
+      return validateCompactPayload(JSON.parse(decompressed))
+    } catch {
+      return null
+    }
+  }
+
+  return decodeLegacyPayload(encoded)
+}
+
+function decodeLegacyPayload(encoded: string): SharePayload | null {
   try {
     const padded = encoded.replaceAll('-', '+').replaceAll('_', '/')
     const base64 = padded.padEnd(Math.ceil(padded.length / 4) * 4, '=')
