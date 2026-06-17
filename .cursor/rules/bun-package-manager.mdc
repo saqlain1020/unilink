@@ -1,0 +1,12 @@
+---
+description: Use Bun as the project package manager
+alwaysApply: true
+---
+
+# Package Manager
+
+- Use Bun for dependency and script commands in this project.
+- Prefer `bun install` for dependency installation and lockfile updates.
+- Prefer `bun add <package>` and `bun remove <package>` when changing dependencies.
+- Prefer `bun run <script>` for package scripts, such as `bun run lint` or `bun run build`.
+- Keep `bun.lock` as the package manager lockfile. Do not introduce `package-lock.json`, `yarn.lock`, or `pnpm-lock.yaml`.
