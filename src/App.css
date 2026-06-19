@@ -18,6 +18,8 @@
   --item-action-bg: var(--accent-three);
   --item-action-text: #050509;
   --item-icon-text: #050509;
+  --flat-link-bg: rgba(255, 255, 255, 0.94);
+  --flat-link-text: #111827;
   --shadow: rgba(0, 0, 0, 0.4);
   --radius-xl: 34px;
   --radius-lg: 24px;
@@ -129,6 +131,8 @@
   --item-action-bg: #cbd5e1;
   --item-action-text: #111827;
   --item-icon-text: #111827;
+  --flat-link-bg: #f8fafc;
+  --flat-link-text: #111827;
   --shadow: rgba(0, 0, 0, 0.38);
 }
 
@@ -151,7 +155,41 @@
   --item-action-bg: #7dd3fc;
   --item-action-text: #082f49;
   --item-icon-text: #082f49;
+  --flat-link-bg: #f8fbff;
+  --flat-link-text: #082f49;
   --shadow: rgba(0, 0, 0, 0.36);
+}
+
+.view-flat {
+  background: var(--bg);
+}
+
+.view-flat .noise,
+.view-flat .orb {
+  display: none;
+}
+
+.view-flat .shared-panel,
+.view-flat .preview-panel {
+  min-height: calc(100svh - 64px);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.view-flat .shared-panel {
+  display: grid;
+  align-content: start;
+}
+
+.view-flat .hero-panel,
+.view-flat .make-panel,
+.view-flat .composer,
+.view-flat .share-card,
+.view-flat .control-deck {
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .noise,
@@ -569,6 +607,46 @@ select option {
   grid-template-columns: 1fr;
 }
 
+.flat-board {
+  display: grid;
+  width: min(420px, 100%);
+  gap: 10px;
+  margin: 0 auto;
+  padding-top: 36px;
+}
+
+.flat-link,
+.flat-empty {
+  display: flex;
+  width: 100%;
+  min-height: 64px;
+  align-items: center;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--flat-link-text);
+  background: var(--flat-link-bg);
+  box-shadow: none;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+}
+
+.flat-link {
+  justify-content: flex-start;
+}
+
+.flat-link:hover {
+  transform: none;
+  filter: brightness(0.98);
+}
+
+.flat-empty {
+  justify-content: center;
+  color: color-mix(in srgb, var(--flat-link-text) 62%, transparent);
+}
+
 .item-card {
   position: relative;
   display: grid;
@@ -724,6 +802,11 @@ select option {
     min-height: auto;
   }
 
+  .view-flat .shared-panel,
+  .view-flat .preview-panel {
+    min-height: auto;
+  }
+
   .make-panel {
     gap: 14px;
     margin-top: 12px;
@@ -745,6 +828,17 @@ select option {
 
   .item-board {
     gap: 10px;
+  }
+
+  .flat-board {
+    gap: 8px;
+    padding-top: 16px;
+  }
+
+  .flat-link,
+  .flat-empty {
+    min-height: 56px;
+    padding-inline: 14px;
   }
 
   .item-board.grid {

@@ -17,6 +17,7 @@ type ThemeName =
   | 'graphite'
   | 'navy'
 type LayoutName = 'grid' | 'list'
+type ViewMode = 'rich' | 'flat'
 
 type ShareItem = {
   id: string
@@ -29,6 +30,7 @@ type SharePayload = {
   v: 1
   theme: ThemeName
   layout: LayoutName
+  view: ViewMode
   items: ShareItem[]
 }
 
@@ -38,6 +40,7 @@ type CompactPayload = {
   v: 1
   t: ThemeName
   l: LayoutName
+  m?: 'r' | 'f'
   i: CompactItem[]
 }
 
@@ -52,6 +55,7 @@ const themes: ThemeName[] = [
   'navy',
 ]
 const layouts: LayoutName[] = ['grid', 'list']
+const viewModes: ViewMode[] = ['rich', 'flat']
 const itemKinds: ItemKind[] = ['website', 'phone', 'email', 'text']
 
 const sampleItems: ShareItem[] = [
@@ -100,6 +104,7 @@ const fallbackPayload: SharePayload = {
   v: 1,
   theme: "graphite",
   layout: "list",
+  view: 'rich',
   items: sampleItems,
 };
 
@@ -160,6 +165,7 @@ function toCompactPayload(payload: SharePayload): CompactPayload {
     v: 1,
     t: payload.theme,
     l: payload.layout,
+    m: payload.view === 'flat' ? 'f' : 'r',
     i: payload.items.map((item) => [
       item.label,
       item.value,
@@ -179,6 +185,7 @@ function validateCompactPayload(value: unknown): SharePayload | null {
     payload.v !== 1 ||
     !themes.includes(payload.t as ThemeName) ||
     !layouts.includes(payload.l as LayoutName) ||
+    (payload.m !== undefined && payload.m !== 'r' && payload.m !== 'f') ||
     !Array.isArray(payload.i)
   ) {
     return null
@@ -210,6 +217,7 @@ function validateCompactPayload(value: unknown): SharePayload | null {
     v: 1,
     theme: payload.t as ThemeName,
     layout: payload.l as LayoutName,
+    view: payload.m === 'f' ? 'flat' : 'rich',
     items,
   }
 }
@@ -261,6 +269,7 @@ function validatePayload(value: unknown): SharePayload | null {
     payload.v !== 1 ||
     !themes.includes(payload.theme as ThemeName) ||
     !layouts.includes(payload.layout as LayoutName) ||
+    (payload.view !== undefined && !viewModes.includes(payload.view as ViewMode)) ||
     !Array.isArray(payload.items)
   ) {
     return null
@@ -287,6 +296,7 @@ function validatePayload(value: unknown): SharePayload | null {
     v: 1,
     theme: payload.theme as ThemeName,
     layout: payload.layout as LayoutName,
+    view: (payload.view as ViewMode | undefined) ?? 'rich',
     items,
   }
 }
@@ -316,6 +326,7 @@ function App() {
   )
   const [theme, setTheme] = useState<ThemeName>(initialPayload.theme)
   const [layout, setLayout] = useState<LayoutName>(initialPayload.layout)
+  const [view, setView] = useState<ViewMode>(initialPayload.view)
   const [label, setLabel] = useState('')
   const [value, setValue] = useState('')
   const [kind, setKind] = useState<ItemKind>('website')
@@ -326,9 +337,10 @@ function App() {
       v: 1,
       theme,
       layout,
+      view,
       items,
     }),
-    [items, layout, theme],
+    [items, layout, theme, view],
   )
 
   const shareUrl = useMemo(() => {
@@ -389,8 +401,50 @@ function App() {
   function renderItemBoard(
     boardItems: ShareItem[],
     boardLayout: LayoutName,
+    boardView: ViewMode,
     allowRemove: boolean,
   ) {
+    if (boardView === 'flat') {
+      return (
+        <div className="flat-board">
+          {boardItems.length === 0 ? (
+            <div className="flat-empty">
+              No items yet
+            </div>
+          ) : (
+            boardItems.map((item) => {
+              const href = itemHref(item)
+
+              if (href) {
+                return (
+                  <a
+                    className="flat-link"
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    key={item.id}
+                  >
+                    {item.label}
+                  </a>
+                )
+              }
+
+              return (
+                <button
+                  className="flat-link"
+                  type="button"
+                  onClick={() => copyText(item.value, item.id)}
+                  key={item.id}
+                >
+                  {copied === item.id ? 'Copied' : item.label}
+                </button>
+              )
+            })
+          )}
+        </div>
+      )
+    }
+
     return (
       <div className={`item-board ${boardLayout}`}>
       {boardItems.length === 0 ? (
@@ -495,6 +549,22 @@ function App() {
                 ))}
               </div>
             </div>
+
+            <div>
+              <p className="deck-label">Display mode</p>
+              <div className="segmented">
+                {viewModes.map((viewMode) => (
+                  <button
+                    type="button"
+                    className={view === viewMode ? 'active' : ''}
+                    onClick={() => setView(viewMode)}
+                    key={viewMode}
+                  >
+                    {viewMode}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -592,12 +662,12 @@ function App() {
             Clear board
           </button>
         </div>
-        {renderItemBoard(items, layout, true)}
+        {renderItemBoard(items, layout, view, true)}
       </section>
   )
 
   return (
-    <main className={`app-shell theme-${theme}`}>
+    <main className={`app-shell theme-${theme} view-${view}`}>
       <div className="noise" aria-hidden="true" />
       <div className="orb orb-one" aria-hidden="true" />
       <div className="orb orb-two" aria-hidden="true" />
@@ -605,7 +675,12 @@ function App() {
       {isSharedRoute ? (
         <>
           <section className="shared-panel">
-            {renderItemBoard(initialPayload.items, initialPayload.layout, false)}
+            {renderItemBoard(
+              initialPayload.items,
+              initialPayload.layout,
+              initialPayload.view,
+              false,
+            )}
           </section>
           <section className="make-panel">
             <div>
